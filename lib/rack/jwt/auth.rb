@@ -64,25 +64,30 @@ module Rack
       end
 
       def call(env)
-        return @app.call(env) if path_matches_excluded_path?(env)
+        auth_is_required = !path_matches_excluded_path?(env)
 
-        if auth_cookie_enabled? && missing_auth_cookie?(env) && missing_auth_header?(env)
-          return return_error('Missing token cookie and Authorization header')
-        end
-        if auth_cookie_enabled? && empty_auth_cookie?(env)
-          return return_error('Empty token cookie')
-        end
-        if auth_cookie_disabled? && missing_auth_header?(env)
-          return return_error('Missing Authorization header')
-        end
-        if auth_cookie_disabled? && invalid_auth_header?(env)
-          return return_error('Invalid Authorization header format')
+        if auth_is_required
+          if auth_cookie_enabled? && missing_auth_cookie?(env) && missing_auth_header?(env)
+            return return_error('Missing token cookie and Authorization header')
+          end
+          if auth_cookie_enabled? && empty_auth_cookie?(env)
+            return return_error('Empty token cookie')
+          end
+          if auth_cookie_disabled? && missing_auth_header?(env)
+            return return_error('Missing Authorization header')
+          end
+          if auth_cookie_disabled? && invalid_auth_header?(env)
+            return return_error('Invalid Authorization header format')
+          end
         end
 
         cookie_token = extract_cookie_token(env)
         header_token = extract_header_token(env)
 
-        verify_token(cookie_token || header_token, env)
+        if auth_is_required || cookie_token || header_token
+          verify_token(cookie_token || header_token, env)
+        end
+
         @app.call(env)
       rescue ::JWT::VerificationError
         return_error('Invalid JWT token : Signature Verification Error')
@@ -159,20 +164,58 @@ module Rack
       end
 
       def check_exclude_type!
-        raise ArgumentError, 'exclude argument must be an Array' unless @exclude.is_a?(Array)
+        raise ArgumentError, 'exclude argument must be an Array' unless exclude.is_a?(Array)
 
-        @exclude.each do |x|
-          raise ArgumentError, 'each exclude Array element must be a String' unless x.is_a?(String)
-          raise ArgumentError, 'each exclude Array element must not be empty' if x.empty?
+        exclude.each do |exclusion|
+          raise ArgumentError, 'each exclude Array element must not be empty' if exclusion.empty?
 
-          unless x.start_with?('/')
-            raise ArgumentError, 'each exclude Array element must start with a /'
+          case exclusion
+          when Hash
+            validate_exclude_hash(exclusion)
+          when String
+            validate_exclude_string(exclusion)
+          else
+            raise ArgumentError, 'each exclude Array element must be a Hash or String'
           end
         end
       end
 
+      def validate_exclude_hash(exclusion)
+        if %i(methods path).to_set < exclusion.keys.to_set
+          raise ArgumentError, 'each exclude Array element must contain keys: path and methods'
+        end
+
+        unless exclusion[:path].start_with?('/')
+          raise ArgumentError, 'each exclude Array element path value must start with a /'
+        end
+
+        unless exclusion[:methods] == :all || exclusion[:methods].is_a?(Array)
+          raise ArgumentError, 'each exclude Array element methods value must be :all or an array'
+        end
+      end
+
+      def validate_exclude_string(exclusion)
+        unless exclusion.start_with?('/')
+          raise ArgumentError, 'each exclude Array element must start with a /'
+        end
+      end
+
       def path_matches_excluded_path?(env)
-        @exclude.any? { |ex| env['PATH_INFO'].start_with?(ex) }
+        exclude.any? do |exclusion|
+          case exclusion
+          when String
+            env['PATH_INFO'].start_with?(exclusion)
+          when Hash
+            env['PATH_INFO'].start_with?(exclusion[:path]) &&
+            (
+              exclusion[:methods] == :all ||
+              exclusion[:methods] == [:all] ||
+              exclusion[:methods].include?(env['REQUEST_METHOD'].downcase.to_sym)
+            )
+          else
+            false
+          end
+        end
       end
 
       def valid_auth_header?(env)
