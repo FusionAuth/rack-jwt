@@ -10,51 +10,106 @@ describe Rack::JWT::Auth do
     ->(env) { [200, env, [payload.to_json]] }
   end
 
-  let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret) }
+  let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, exclude: exclusion) }
 
   describe 'when handling exclusions' do
-    describe 'passes through matching exact path' do
-      let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, exclude: ['/static']) }
+    context 'when exclusion is specified with String' do
+      let(:exclusion) { %w(/books /music) }
 
-      it 'returns a 200' do
-        get('/static')
-        expect(last_response.status).to eq 200
+      context 'with matching exact path' do
+        it 'returns a 200' do
+          get('/books')
+          expect(last_response.status).to eq 200
+        end
+      end
+
+      context 'with matching exact path with trailing slash' do
+        it 'returns a 200' do
+          get('/books/')
+          expect(last_response.status).to eq 200
+        end
+      end
+
+      context 'with matching exact path with sub-path' do
+        it 'returns a 200' do
+          get('/books/foo/bar')
+          expect(last_response.status).to eq 200
+        end
+      end
+
+      context 'with matching path and various http methods', :aggrgate_failures do
+        it 'returns a 200' do
+          get('/books/foo')
+          expect(last_response.status).to eq 200
+
+          post('/books/foo')
+          expect(last_response.status).to eq 200
+
+          patch('/books/foo')
+          expect(last_response.status).to eq 200
+
+          delete('/books/foo')
+          expect(last_response.status).to eq 200
+        end
       end
     end
 
-    describe 'passes through matching exact path with trailing slash' do
-      let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, exclude: ['/static']) }
-
-      it 'returns a 200' do
-        get('/static/')
-        expect(last_response.status).to eq 200
+    context 'when exclusion is specified with Hash' do
+      let(:exclusion) do
+        [
+          { path: '/books',  methods: :all },
+          { path: '/music',  methods: [:get] },
+          { path: '/films',  methods: [:get] },
+        ]
       end
-    end
 
-    describe 'passes through matching exact path with sub-path' do
-      let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, exclude: ['/static']) }
+      context 'with matching path and specific http method' do
+        it 'returns a 200', :aggrgate_failures do
+          get('/music')
+          expect(last_response.status).to eq 200
 
-      it 'returns a 200' do
-        get('/static/foo/bar')
-        expect(last_response.status).to eq 200
+          get('/music/')
+          expect(last_response.status).to eq 200
+
+          get('/music/foo/bar')
+          expect(last_response.status).to eq 200
+        end
       end
-    end
 
-    describe 'passes through matching path with multiple exclusions' do
-      let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, exclude: %w(/docs /books /static)) }
+      context 'with matching path but a http method not specified' do
+        it 'returns a 401', :aggrgate_failures do
+          patch('/music/foo/bar')
+          expect(last_response.status).to eq 401
 
-      it 'returns a 200' do
-        get('/static/foo/bar')
-        expect(last_response.status).to eq 200
+          post('/music/foo/bar')
+          expect(last_response.status).to eq 401
+
+          delete('/music/foo/bar')
+          expect(last_response.status).to eq 401
+        end
       end
-    end
 
-    describe 'fails when no matching path and no token' do
-      let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, exclude: %w(/docs /books /static)) }
+      context 'with matching path and all http methods' do
+        it 'returns a 200', :aggrgate_failures do
+          get('/books')
+          expect(last_response.status).to eq 200
 
-      it 'returns a 200' do
-        get('/somewhere')
-        expect(last_response.status).to eq 401
+          post('/books/')
+          expect(last_response.status).to eq 200
+
+          patch('/books/foo')
+          expect(last_response.status).to eq 200
+
+          delete('/books/foo')
+          expect(last_response.status).to eq 200
+        end
+      end
+
+      context 'with no matching path and no token' do
+        it 'returns a 401' do
+          get('/somewhere')
+          expect(last_response.status).to eq 401
+        end
       end
     end
   end

@@ -16,7 +16,7 @@ describe Rack::JWT::Auth do
     describe 'with unsigned (none) valid header and token' do
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: nil, verify: false, options: { algorithm: 'none' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, nil, 'none')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -26,7 +26,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with valid HMAC HS256 token (default)' do
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, secret, 'HS256')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -40,7 +40,7 @@ describe Rack::JWT::Auth do
     describe 'with valid HMAC HS256 token (explicit)' do
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, verify: verify, options: { algorithm: 'HS256' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, secret, 'HS256')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -54,7 +54,7 @@ describe Rack::JWT::Auth do
     describe 'with valid HMAC HS256 token from http://jwt.io' do
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, verify: verify, options: { algorithm: 'HS256' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         # generate with HMAC secret of 'secret'
         header 'Authorization', "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
         get('/')
@@ -69,7 +69,7 @@ describe Rack::JWT::Auth do
     describe 'with valid HMAC HS384 token' do
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, verify: verify, options: { algorithm: 'HS384' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, secret, 'HS384')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -83,7 +83,7 @@ describe Rack::JWT::Auth do
     describe 'with valid HMAC HS512 token' do
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, verify: verify, options: { algorithm: 'HS512' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, secret, 'HS512')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -99,7 +99,7 @@ describe Rack::JWT::Auth do
       let(:rsa_public)  { rsa_private.public_key }
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: rsa_public, verify: verify, options: { algorithm: 'RS256' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, rsa_private, 'RS256')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -115,7 +115,7 @@ describe Rack::JWT::Auth do
       let(:rsa_public)  { rsa_private.public_key }
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: rsa_public, verify: verify, options: { algorithm: 'RS384' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, rsa_private, 'RS384')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -131,7 +131,7 @@ describe Rack::JWT::Auth do
       let(:rsa_public)  { rsa_private.public_key }
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: rsa_public, verify: verify, options: { algorithm: 'RS512' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, rsa_private, 'RS512')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -151,7 +151,7 @@ describe Rack::JWT::Auth do
       let(:ecdsa_pub) { ecdsa_pub }
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: ecdsa_pub, verify: verify, options: { algorithm: 'ES256' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, ecdsa, 'ES256')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -171,7 +171,7 @@ describe Rack::JWT::Auth do
       let(:ecdsa_pub) { ecdsa_pub }
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: ecdsa_pub, verify: verify, options: { algorithm: 'ES384' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, ecdsa, 'ES384')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -191,7 +191,7 @@ describe Rack::JWT::Auth do
       let(:ecdsa_pub) { ecdsa_pub }
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: ecdsa_pub, verify: verify, options: { algorithm: 'ES512' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, ecdsa, 'ES512')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -208,7 +208,7 @@ describe Rack::JWT::Auth do
 
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: public_key, verify: verify, options: { algorithm: 'ED25519' }) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, private_key, 'ED25519')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -226,7 +226,7 @@ describe Rack::JWT::Auth do
     describe 'succeeds when verify: false even though secret in token is bad' do
       let(:app) { Rack::JWT::Auth.new(inner_app, secret: secret, verify: false) }
 
-      it 'returns a 200' do
+      it 'returns a 200', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, 'badsecret', 'HS256')}"
         get('/')
         expect(last_response.status).to eq 200
@@ -238,7 +238,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with missing header' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         get('/')
         expect(last_response.status).to eq 401
         body = JSON.parse(last_response.body, symbolize_names: true)
@@ -249,7 +249,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header, schema, but empty token' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', 'Bearer '
         get('/')
         expect(last_response.status).to eq 401
@@ -261,7 +261,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and token but missing schema' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', issuer.encode(payload, secret, 'HS256')
         get('/')
         expect(last_response.status).to eq 401
@@ -273,7 +273,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and valid token but incorrect schema' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', "Badstuff #{issuer.encode(payload, secret, 'HS256')}"
         get('/')
         expect(last_response.status).to eq 401
@@ -285,7 +285,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and malformed double period token' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', 'Bearer abc123..abc123.abc123'
         get('/')
         expect(last_response.status).to eq 401
@@ -297,7 +297,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and malformed trailing period token' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', 'Bearer abc123.abc123.abc123.'
         get('/')
         expect(last_response.status).to eq 401
@@ -309,7 +309,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and malformed leading period token' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', 'Bearer .abc123.abc123.abc123'
         get('/')
         expect(last_response.status).to eq 401
@@ -321,7 +321,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and malformed bad character token' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', 'Bearer abc!123.abc123.abc123'
         get('/')
         expect(last_response.status).to eq 401
@@ -333,7 +333,7 @@ describe Rack::JWT::Auth do
     end
 
     describe 'with header and valid token but a different secret in the token than on server' do
-      it 'returns a 401' do
+      it 'returns a 401', :aggregate_failures do
         header 'Authorization', "Bearer #{issuer.encode(payload, 'badsecret', 'HS256')}"
         get('/')
         expect(last_response.status).to eq 401
@@ -341,6 +341,59 @@ describe Rack::JWT::Auth do
         expect(body).to eq(error: 'Invalid JWT token : Signature Verification Error')
         expect(last_response.headers['jwt.header']).to eq(nil)
         expect(last_response.headers['jwt.payload']).to eq(nil)
+      end
+    end
+  end
+
+  describe 'exclude list' do
+    let(:app) do
+      Rack::JWT::Auth.new(
+        inner_app, secret: nil, verify: false, options: { algorithm: 'none' },
+        exclude: [{ path: '/static', methods: [:get] }]
+      )
+    end
+
+    describe 'when path is in exclude list' do
+      describe 'when JWT token is in header' do
+        it 'returns a 200 and parses the JWT token', :aggregate_failures do
+          header 'Authorization', "Bearer #{issuer.encode(payload, nil, 'none')}"
+          get('/static')
+          expect(last_response.status).to eq 200
+          expect(last_response.headers['jwt.header']).to eq({"typ"=>"JWT", "alg"=>"none"})
+          expect(last_response.headers['jwt.payload']).to eq("foo" => "bar")
+        end
+      end
+
+      describe 'when JWT token is missing from header' do
+        it 'returns a 200', :aggregate_failures do
+          get('/static')
+          expect(last_response.status).to eq 200
+          expect(last_response.headers['jwt.header']).to be_nil
+          expect(last_response.headers['jwt.payload']).to be_nil
+        end
+      end
+    end
+
+    describe 'when path is not in exclude list' do
+      describe 'when JWT token is in header' do
+        it 'returns a 200 and parses the JWT token', :aggregate_failures do
+          header 'Authorization', "Bearer #{issuer.encode(payload, nil, 'none')}"
+          get('/book')
+          expect(last_response.status).to eq 200
+          expect(last_response.headers['jwt.header']).to eq({"typ"=>"JWT", "alg"=>"none"})
+          expect(last_response.headers['jwt.payload']).to eq("foo" => "bar")
+        end
+      end
+
+      describe 'when JWT token is missing from header' do
+        it 'returns a 401', :aggregate_failures do
+          get('/book')
+          expect(last_response.status).to eq 401
+          body = JSON.parse(last_response.body, symbolize_names: true)
+          expect(body).to eq(error: 'Missing Authorization header')
+          expect(last_response.headers['jwt.header']).to be_nil
+          expect(last_response.headers['jwt.payload']).to be_nil
+        end
       end
     end
   end
