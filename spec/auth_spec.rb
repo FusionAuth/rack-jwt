@@ -113,6 +113,30 @@ describe Rack::JWT::Auth do
           expect { Rack::JWT::Auth.new(inner_app, args) }.to raise_error(ArgumentError)
         end
       end
+
+      describe 'when algorithm "RS256" and secret is nil and verify is true and jwks is not provided' do
+        it 'raises an exception' do
+          expect { Rack::JWT::Auth.new(inner_app, secret: nil, verify: false, options: { algorithm: 'RS256' }) }.to raise_error(ArgumentError)
+        end
+      end
+
+      describe 'when algorithm "RS256" and secret is nil and verify is true and jwks is provided' do
+        let(:app) { Rack::JWT::Auth.new(inner_app, secret: nil, verify: false, options: { algorithm: 'RS256', jwks: {} }) }
+
+        it 'succeeds' do
+          header 'Authorization', "Bearer #{issuer.encode(payload, secret, 'HS256')}"
+          get('/')
+          expect(last_response.status).to eq 200
+        end
+      end
+
+      describe 'when algorithm "HS256" and secret is nil and verify is true and jwks is provided' do
+        it 'raises an exception' do
+          expect { Rack::JWT::Auth.new(inner_app, secret: nil, verify: false, options: { algorithm: 'HS256' }) }.to raise_error(ArgumentError)
+        end
+      end
+
+
     end
 
     # see also exclusion_spec.rb

@@ -134,8 +134,9 @@ module Rack
       def check_secret!
         return unless @secret.nil? || (@secret.is_a?(String) && @secret.empty?)
         return if @options[:algorithm] == 'none'
+        return if (!@options[:jwks].nil? && @options[:algorithm] == 'RS256')
 
-        raise ArgumentError, 'secret argument can only be nil/empty for the "none" algorithm'
+        raise ArgumentError, 'secret argument can only be nil/empty for the "none" algorithm or if you are using jwks'
       end
 
       def check_secret_and_verify_for_none_alg!
