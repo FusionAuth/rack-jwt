@@ -40,10 +40,11 @@ $ gem install rack-jwt
 
 * `verify` : optional : Boolean : Determines whether JWT will verify tokens keys for mismatch key types when decoded. Default is `true`. Set to `false` if you are using the `'none'` algorithm.
 
-* `cookie_name` : optional : String : If set, the middleware will fetch the token from the
-cookie with given name. The cookie's value should be set **without Bearer prefix**.
-
 * `options` : optional : Hash : A hash of options that are passed through to JWT to configure supported claims and algorithms. See the ruby-jwt docs for [more information of the algorithms and their requirements](https://github.com/jwt/ruby-jwt#algorithms-and-usage) as well as [more information on the supported claims](https://github.com/progrium/ruby-jwt#support-for-reserved-claim-names). These options are passed through without change to the underlying `ruby-jwt` gem. By default only expiration (exp) and Not Before (nbf) claims are verified. Pass in an algorithm choice like `{ algorithm: 'HS256' }`. You can pass in a `jwks` hash to have the JWT verified against a [JWKS list](https://github.com/jwt/ruby-jwt#json-web-key-jwk). 
+
+* `options.cookie_name` : optional : String : If set, the middleware will fetch the token from the 
+cookie with given name. The cookie's value should be set **without Bearer prefix**. Currently this 
+must be set in the `options` hash.
 
 * `exclude` : optional : Array : An Array of path strings (with, optionally, http methods) representing paths that should not be checked for the presence of a valid JWT token. Excludes sub-paths as of specified paths as well (e.g. `%w(/docs)` excludes `/docs/some/thing.html` also). Each path should start with a `/`. Optionally, each path can be specified with http method, either `:all` or a select list of http methods, eg `[:get]`.  If a path (and http method if specified) matches the current request path (and http method), authentication and verification of token is not required, but a token will be parsed and verified if one is supplied.
 
