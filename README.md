@@ -73,6 +73,7 @@ Rails.application.config.middleware.use Rack::JWT::Auth, my_args
 ```
 
 ## Generating tokens
+
 You can generate JSON Web Tokens for your users using the
 `Rack::JWT::Token#encode` method which takes `payload`,
 `secret`, and `algorithm` params.
@@ -146,6 +147,19 @@ config.middleware.use Rack::JWT::Auth, jwt_auth_args
 ```
 
 See https://github.com/jwt/ruby-jwt#json-web-key-jwk for more about loading and caching the JWKS keyset.
+
+## Getting access to the token
+
+You can get access to the decoded token in case you need to do further examination of the claims. For example, in rails:
+
+```ruby
+// in your controller
+jwt = request.env['jwt.payload']
+roles = jwt['roles']
+// examine roles
+```
+
+You can also look at the `jwt.header` key if you need to examine that.
 
 ## Contributing
 
